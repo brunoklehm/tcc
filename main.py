@@ -1,7 +1,6 @@
 import random
-from socket import MsgFlag
-import time
 import json
+import psutil
 
 from paho.mqtt import client as mqtt_client
 
@@ -42,7 +41,11 @@ def subscribe(client: mqtt_client):
 
 
 def get_device_data():
-    msg = '{ "cpu":"50", "memory":30, "network":"192.168.0.1"}'
+    data = {}
+    data['cpu'] = psutil.cpu_percent(1)
+    data['memory'] = psutil.virtual_memory()[2]
+
+    msg = json.dumps(data)
 
     return msg
 
@@ -62,7 +65,6 @@ def run():
             print(f"Send `{msg}` to topic `{topic}`")
         else:
             print(f"Failed to send message to topic {topic}")
-        time.sleep(1)
 
 
 if __name__ == '__main__':
