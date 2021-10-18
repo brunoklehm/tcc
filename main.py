@@ -1,16 +1,19 @@
 import random
 import json
 import psutil
+import config
 
 from paho.mqtt import client as mqtt_client
 
 # MQTT Connection Settings
-broker = 'broker.emqx.io'
-port = 1883
-topic = "devices/information"
+broker = config.mqtt['broker']
+port = config.mqtt['port']
+topic = config.mqtt['topic']
+username = config.mqtt['username']
+password = config.mqtt['password']
+
+# Generates a random client ID
 client_id = f'python-mqtt-{random.randint(0, 100)}'
-# username = 'user'
-# password = 'pass'
 
 
 # Connects to MQTT Broker
