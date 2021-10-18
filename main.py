@@ -40,14 +40,34 @@ def subscribe(client: mqtt_client):
     client.on_message = on_message
 
 
+# Gets the information of the device at the current moment
 def get_device_data():
     data = {}
-    data['cpu'] = psutil.cpu_percent(1)
-    data['memory'] = psutil.virtual_memory()[2]
+    data['cpu_percentage'] = psutil.cpu_percent(1)
+    # pegar dados como frequencia e numero de cores do CPU?
+    data['memory_percentage'] = psutil.virtual_memory()[2]
+    # pegar total de GBs da memoria?
+    # data['network_ip_address']
+    # data['network_speed']
+    # data['disk_usage']
+    # data['battery_level']
+    # data['cloud_latency']
+    # data['location'] ? não sei se é possível pegar esse tipo de informação com o psutil
+    # data['application_type']
+    # more to be added
 
     msg = json.dumps(data)
 
     return msg
+
+
+# Function that checks latency with cloud regularly
+def check_cloud_latency():
+    pass
+
+
+def select_best_node():
+    pass
 
 
 # Main function
