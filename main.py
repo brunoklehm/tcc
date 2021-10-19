@@ -51,9 +51,9 @@ def get_device_data():
     data['memory_percentage'] = psutil.virtual_memory()[2]
     # pegar total de GBs da memoria?
     # data['network_ip_address']
-    # data['network_speed']
     # data['disk_usage']
     # data['battery_level']
+    # data['network_speed']
     # data['cloud_latency']
     # data['location'] ? não sei se é possível pegar esse tipo de informação com o psutil
     # data['application_type']
