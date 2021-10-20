@@ -70,6 +70,8 @@ def check_cloud_latency():
 
 
 def select_best_node():
+    # Aplicação -> Dispositivo -> Rede
+    # Verificar primeiro a aplicação
     pass
 
 
@@ -92,3 +94,5 @@ def run():
 
 if __name__ == '__main__':
     run()
+
+# Tablet, Gateway e Cloud
