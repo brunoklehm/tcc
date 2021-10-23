@@ -1,4 +1,4 @@
-import netifaces # For getting the network interfaces
+import time
 
 import platform    # For getting the operating system name
 import subprocess  # For executing a shell command
@@ -18,10 +18,10 @@ def ping(host):
     return subprocess.call(command) == 0
 
 def main():
-    while True:
-        teste = 1;
-        print("teste" + str(teste))
-        teste = teste + 1
+    # start = time.time()
+    result = ping("8.8.8.8")
+    # duration = time.time() - start
+    print("Result: " + str(result))
         
 
 if __name__ == "__main__":
