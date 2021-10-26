@@ -29,10 +29,9 @@ def connect_mqtt():
 
 
 def publish(client):
-    msg_count = 0
     while True:
         time.sleep(1)
-        msg = f"messages: {msg_count}"
+        msg = get_data()
         result = client.publish(topic, msg)
         # result: [0, 1]
         status = result[0]
@@ -40,12 +39,14 @@ def publish(client):
             print(f"Send `{msg}` to topic `{topic}`")
         else:
             print(f"Failed to send message to topic {topic}")
-        msg_count += 1
 
-def data():
+def get_data():
   data = {}
   data['application_type'] = random.randint(0, 3)
-  
+  data['data_1'] = random.randint(0, 10000000)
+  data['data_2'] = random.randint(0, 10000000)
+  data['data_3'] = random.randint(0, 10000000)
+  data['client_id'] = client_id
 
   msg = json.dumps(data)
   return msg
