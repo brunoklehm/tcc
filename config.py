@@ -1,5 +1,5 @@
 mqtt = dict(
-    broker = 'broker.emqx.io',
+    broker = 'localhost',
     port = 1883,
     topic = "devices/edge",
     username = '',

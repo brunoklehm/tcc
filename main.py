@@ -3,6 +3,9 @@ import json
 import psutil
 import config
 
+from types import SimpleNamespace
+
+
 from paho.mqtt import client as mqtt_client
 from icmplib import async_ping
 
@@ -15,7 +18,9 @@ username = config.mqtt['username']
 password = config.mqtt['password']
 
 # Generates a random client ID
-client_id = f'python-mqtt-{random.randint(0, 1000)}'
+client_id = f'python-mqtt-{random.randint(0, 100000)}'
+
+device_list = []
 
 # Connects to MQTT Broker
 def connect_mqtt() -> mqtt_client:
@@ -38,15 +43,29 @@ def connect_mqtt() -> mqtt_client:
 # Subscribes to the MQTT Topic
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, msg):
-        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+        if (msg.topic == "devices/edge"):
+            print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+            add_device(msg.payload.decode())
 
     client.subscribe(topic)
     client.on_message = on_message
 
 
+def add_device(msg):
+    # transforms the json into a python object
+    device = json.loads(msg, object_hook=lambda d: SimpleNamespace(**d))
+
+    # Inserts the device if not in list
+    if not any(x.client_id == device.client_id for x in device_list):
+        device_list.append(device)
+        print(device.client_id)
+        print(device_list)
+
+
 # Gets the information of the device at the current moment
 def get_device_data():
     data = {}
+    data['client_id'] = client_id
     data['cpu_percentage'] = psutil.cpu_percent(1) # CPU Percentage
     data['cpu_frequency'] = psutil.cpu_freq().max # CPU Frequency
     data['cpu_count'] = psutil.cpu_count() # CPU Count
@@ -58,7 +77,7 @@ def get_device_data():
     # data['network_speed']
     # data['cloud_latency']
     # data['location'] ? não sei se é possível pegar esse tipo de informação com o psutil
-    data['application_type'] = config['application_type']
+    data['application_type'] = config.application_type
     # more to be added
 
     msg = json.dumps(data)
@@ -73,10 +92,12 @@ async def check_cloud_latency():
 def ping_server():
     async_ping("8.8.8.8", count=4, interval=1, timeout=2, id=None, source=None, family=None, privileged=True)
 
+
 def select_best_node():
     # Aplicação -> Dispositivo -> Rede
     # Verificar primeiro a aplicação
-    pass
+    for device in device_list:
+        pass
 
 
 # Main function
@@ -100,5 +121,6 @@ def run():
 
 if __name__ == '__main__':
     run()
+
 
 # Tablet, Gateway e Cloud
