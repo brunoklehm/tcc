@@ -12,7 +12,7 @@ topic = "devices/sensors"
 #password = ''
 
 # generate client ID with pub prefix randomly
-client_id = f'python-mqtt-{random.randint(0, 1000)}'
+client_id = f'sensor-mqtt-{random.randint(0, 1000)}'
 
 def connect_mqtt():
     def on_connect(client, userdata, flags, rc):

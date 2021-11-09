@@ -21,7 +21,7 @@ username = config.mqtt['username']
 password = config.mqtt['password']
 
 # Generates a random client ID
-client_id = f'python-mqtt-{random.randint(0, 100000)}'
+client_id = f'device-mqtt-{random.randint(0, 100000)}'
 
 device_list = []
 
@@ -46,9 +46,16 @@ def connect_mqtt() -> mqtt_client:
 # Subscribes to the MQTT Topic
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, msg):
+        
         if (msg.topic == "devices/edge"):
-            print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+            # Add device information to the list of devices
+            # print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
             add_device(msg.payload.decode())
+
+        
+        elif (msg.topic == "devices/sensors"):
+            # Selects the best node to process data
+            select_best_node()
 
     client.subscribe(topic)
     client.on_message = on_message
@@ -61,8 +68,8 @@ def add_device(msg):
     # Inserts the device if not in list
     if not any(x.client_id == device.client_id for x in device_list):
         device_list.append(device)
-        print(device.client_id)
-        print(device_list)
+        print("Device added to the list: " + str(device.client_id))
+        
 
 
 # Gets the information of the device at the current moment
@@ -104,7 +111,7 @@ def select_best_node():
     # Aplicação -> Dispositivo -> Rede
     # Verificar primeiro a aplicação
     for device in device_list:
-        pass
+        print(device)
 
 
 # Main function
@@ -112,6 +119,7 @@ def run():
     client = connect_mqtt()
     subscribe(client)
     client.loop_start()
+    print("Algorithm started")
     while True:
         msg = get_device_data()
         result = client.publish(topic, msg)
@@ -120,7 +128,8 @@ def run():
         status = result[0]
 
         if status == 0:
-            print(f"Send `{msg}` to topic `{topic}`")
+            # print(f"Send `{msg}` to topic `{topic}`")
+            pass
         else:
             print(f"Failed to send message to topic {topic}")
 
