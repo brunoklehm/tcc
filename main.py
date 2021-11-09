@@ -1,7 +1,10 @@
+from asyncio.windows_events import NULL
 import random
 import json
 import psutil
 import config
+import asyncio
+import time
 
 from types import SimpleNamespace
 
@@ -33,7 +36,7 @@ def connect_mqtt() -> mqtt_client:
     client = mqtt_client.Client(client_id)
 
     # Only needed if MQTT broker has username as password set
-    #client.username_pw_set(username, password)
+    # client.username_pw_set(username, password)
 
     client.on_connect = on_connect
     client.connect(broker, port)
@@ -66,18 +69,25 @@ def add_device(msg):
 def get_device_data():
     data = {}
     data['client_id'] = client_id
-    data['cpu_percentage'] = psutil.cpu_percent(1) # CPU Percentage
+    data['cpu_percentage'] = psutil.cpu_percent() # CPU Percentage
     data['cpu_frequency'] = psutil.cpu_freq().max # CPU Frequency
     data['cpu_count'] = psutil.cpu_count() # CPU Count
-    data['memory_percentage'] = psutil.virtual_memory()[2] # Memory Percentage
-    # pegar total de GBs da memoria?
+    data['memory_total'] = psutil.virtual_memory().total # Memory Total
+    data['memory_percentage'] = psutil.virtual_memory().percent # Memory Percentage
+    data['cloud_latency'] = asyncio.run(check_cloud_latency()) # Cloud Latency
+    
+    # Não está conseguindo pegar a porcentagem de uso de disco corretamente
+    # data['disk_partitions'] = psutil.disk_partitions()
+    # data['disk_usage'] = psutil.disk_usage(psutil.disk_partitions()[0][0]) # Disk Usage
+
     # data['network_ip_address']
-    # data['disk_usage']
-    # data['battery_level']
-    # data['network_speed']
-    # data['cloud_latency']
+
+    # Battery doesn't work on windows
+    data['battery_level'] = psutil.sensors_battery().percent if psutil.sensors_battery() else NULL# Battery Percentage
+    data['battery_remaining'] = psutil.sensors_battery().secsleft if psutil.sensors_battery() else NULL # Battery Seconds Remaining
+    data['application_type'] = config.application_type # Application Type
+
     # data['location'] ? não sei se é possível pegar esse tipo de informação com o psutil
-    data['application_type'] = config.application_type
     # more to be added
 
     msg = json.dumps(data)
@@ -86,13 +96,10 @@ def get_device_data():
 
 # Function that checks latency with cloud regularly
 async def check_cloud_latency():
-    await ping_server()
+    host = await async_ping(config.cloud_ip, count=1, interval=0.2)
+    return host.avg_rtt
 
-
-def ping_server():
-    async_ping("8.8.8.8", count=4, interval=1, timeout=2, id=None, source=None, family=None, privileged=True)
-
-
+# Based on the data of all devices, it returns the best node to process the data
 def select_best_node():
     # Aplicação -> Dispositivo -> Rede
     # Verificar primeiro a aplicação
@@ -109,16 +116,18 @@ def run():
         msg = get_device_data()
         result = client.publish(topic, msg)
 
-        # check_cloud_latency()
-
         # result: [0, 1]
         status = result[0]
+
         if status == 0:
             print(f"Send `{msg}` to topic `{topic}`")
         else:
             print(f"Failed to send message to topic {topic}")
 
+        time.sleep(0.5)
 
+
+# This is where it all starts :)
 if __name__ == '__main__':
     run()
 
