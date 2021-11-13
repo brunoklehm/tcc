@@ -105,13 +105,30 @@ def get_device_data():
 async def check_cloud_latency():
     host = await async_ping(config.cloud_ip, count=1, interval=0.2)
     return host.avg_rtt
+    # Fazer ping dos 3 dispositivos
+
 
 # Based on the data of all devices, it returns the best node to process the data
 def select_best_node():
+    # Tablet -> Datacenter -> Cloud
     # Aplicação -> Dispositivo -> Rede
     # Verificar primeiro a aplicação
     for device in device_list:
         print(device)
+
+# Graficos da máquina no tablet
+# Graficos do site no datacenter
+# Graficos da empresa na cloud
+# Verifica aplicação
+# Verifica dispositivo
+# Verifica rede
+
+# Resultado será a latencia geral
+
+# Rodar uma vez pra nuvem = 30
+# Rodar uma vez pro tablet = 10, 0ms
+# Rodar uma vez pro datacenter = 10, 0.5ms
+# Rodar uma vez pro cloud = 10, 2ms
 
 
 # Main function
