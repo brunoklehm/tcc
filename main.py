@@ -6,8 +6,6 @@ import config
 import asyncio
 import time
 
-from types import SimpleNamespace
-
 
 from paho.mqtt import client as mqtt_client
 from icmplib import async_ping
@@ -22,8 +20,6 @@ password = config.mqtt['password']
 
 # Generates a random client ID
 client_id = f'device-mqtt-{random.randint(0, 100000)}'
-
-device_list = []
 
 # Connects to MQTT Broker
 def connect_mqtt() -> mqtt_client:
@@ -41,36 +37,7 @@ def connect_mqtt() -> mqtt_client:
     client.on_connect = on_connect
     client.connect(broker, port)
     return client
-
-
-# Subscribes to the MQTT Topic
-def subscribe(client: mqtt_client):
-    def on_message(client, userdata, msg):
         
-        if (msg.topic == "devices/edge"):
-            # Add device information to the list of devices
-            # print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
-            add_device(msg.payload.decode())
-
-        
-        elif (msg.topic == "devices/sensors"):
-            # Selects the best node to process data
-            select_best_node()
-
-    client.subscribe(topic)
-    client.on_message = on_message
-
-
-def add_device(msg):
-    # transforms the json into a python object
-    device = json.loads(msg, object_hook=lambda d: SimpleNamespace(**d))
-
-    # Inserts the device if not in list
-    if not any(x.client_id == device.client_id for x in device_list):
-        device_list.append(device)
-        print("Device added to the list: " + str(device.client_id))
-        
-
 
 # Gets the information of the device at the current moment
 def get_device_data():
@@ -108,13 +75,33 @@ async def check_cloud_latency():
     # Fazer ping dos 3 dispositivos
 
 
-# Based on the data of all devices, it returns the best node to process the data
-def select_best_node():
-    # Tablet -> Datacenter -> Cloud
-    # Aplicação -> Dispositivo -> Rede
-    # Verificar primeiro a aplicação
-    for device in device_list:
-        print(device)
+# Main function
+def run():
+    client = connect_mqtt()
+    client.loop_start()
+    print("Algorithm started")
+    while True:
+        msg = get_device_data()
+        result = client.publish(topic, msg)
+
+        # result: [0, 1]
+        status = result[0]
+
+        if status == 0:
+            print(f"Send `{msg}` to topic `{topic}`")
+            pass
+        else:
+            print(f"Failed to send message to topic {topic}")
+
+        time.sleep(0.5)
+
+
+# Main function
+if __name__ == '__main__':
+    run()
+
+
+# Tablet, Gateway e Cloud
 
 # Graficos da máquina no tablet
 # Graficos do site no datacenter
@@ -129,33 +116,3 @@ def select_best_node():
 # Rodar uma vez pro tablet = 10, 0ms
 # Rodar uma vez pro datacenter = 10, 0.5ms
 # Rodar uma vez pro cloud = 10, 2ms
-
-
-# Main function
-def run():
-    client = connect_mqtt()
-    subscribe(client)
-    client.loop_start()
-    print("Algorithm started")
-    while True:
-        msg = get_device_data()
-        result = client.publish(topic, msg)
-
-        # result: [0, 1]
-        status = result[0]
-
-        if status == 0:
-            # print(f"Send `{msg}` to topic `{topic}`")
-            pass
-        else:
-            print(f"Failed to send message to topic {topic}")
-
-        time.sleep(0.5)
-
-
-# This is where it all starts :)
-if __name__ == '__main__':
-    run()
-
-
-# Tablet, Gateway e Cloud
