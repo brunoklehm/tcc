@@ -94,8 +94,6 @@ def select_best_node(sensor_data):
     devices = device_list
 
     selected_node = NULL
-    least_cpu_percentage = 100
-    least_memory_percentage = 100
 
     filtered_devices = []
 
@@ -111,6 +109,8 @@ def select_best_node(sensor_data):
     if filtered_devices:
         devices = filtered_devices
 
+    final_round = []
+
     # Verifica os dados da máquina e da rede
     for device in devices:
         cpu = device.cpu_percentage
@@ -119,9 +119,20 @@ def select_best_node(sensor_data):
         
         mp = ( ((cpu * 0.5) + (memory * 0.3) + (battery * 0.2)) / 1)
 
-        print(mp)
+        d = (device.client_id, device.network_ip_address, mp)
+        
+        final_round.append(d)
 
-    return 1
+    least_mp = 100
+
+    for device in final_round:
+        if device[2] < least_mp:
+            least_mp = device[2]
+            selected_node = device
+
+    print(selected_node)
+
+    return selected_node[1] # ip address
 
 
 def get_data(application_type):
