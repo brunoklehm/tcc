@@ -21,6 +21,7 @@ client_id = f'sensor-mqtt-{random.randint(0, 1000)}'
 
 device_list = []
 
+
 def connect_mqtt():
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -40,7 +41,7 @@ def publish(client):
     for x in range(0, 3):
         for y in range(0, 10):
             msgs.append(get_data(x))
-    
+
     while len(device_list) != 1:
         time.sleep(1)
 
@@ -56,7 +57,6 @@ def publish(client):
             print(f"Failed to send message to topic {topic}")
 
         time.sleep(0.2)
-        
 
 
 def subscribe(client: mqtt_client):
@@ -79,45 +79,62 @@ def add_device(msg):
         device_list.append(device)
         print("Device added to the list: " + str(device.client_id))
 
+    # Updates the device data
+    else:
+        devices = device_list
+        for index, item in enumerate(devices):
+            if item.client_id == device.client_id:
+                device_list[index] = device
+
 
 # Based on the data of all devices, it returns the best node to process the data
 def select_best_node(sensor_data):
-    sensor = json.loads(sensor_data, object_hook=lambda d: SimpleNamespace(**d))
+    sensor = json.loads(
+        sensor_data, object_hook=lambda d: SimpleNamespace(**d))
     devices = device_list
 
     selected_node = NULL
     least_cpu_percentage = 100
     least_memory_percentage = 100
 
-    compatible_apptype = []
+    filtered_devices = []
 
     # Tablet -> Datacenter -> Cloud
     # Aplicação -> Dispositivo -> Rede
 
-    # Verificar primeiro a aplicação
+    # Verifica primeiro o tipo de aplicação
     for device in devices:
         if(device.application_type == sensor.application_type):
-            compatible_apptype.append(device)
-    
+            filtered_devices.append(device)
+
     # Se tiver dispositivos com o mesmo tipo de aplicação, filtra a lista
-    if compatible_apptype:
-       devices = compatible_apptype 
+    if filtered_devices:
+        devices = filtered_devices
 
-    return 1;
+    # Verifica os dados da máquina e da rede
+    for device in devices:
+        cpu = device.cpu_percentage
+        memory = device.memory_percentage
+        battery = device.battery_level
+        
+        mp = ( ((cpu * 0.5) + (memory * 0.3) + (battery * 0.2)) / 1)
 
+        print(mp)
 
+    return 1
 
 
 def get_data(application_type):
-  data = {}
-  data['application_type'] = application_type
-  data['data_1'] = random.randint(0, 10000000)
-  data['data_2'] = random.randint(0, 10000000)
-  data['data_3'] = random.randint(0, 10000000)
-  data['client_id'] = client_id
+    data = {}
+    data['application_type'] = application_type
+    data['data_1'] = random.randint(0, 10000000)
+    data['data_2'] = random.randint(0, 10000000)
+    data['data_3'] = random.randint(0, 10000000)
+    data['client_id'] = client_id
 
-  msg = json.dumps(data)
-  return msg
+    msg = json.dumps(data)
+    return msg
+
 
 def run():
     client = connect_mqtt()
