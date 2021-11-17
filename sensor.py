@@ -1,16 +1,18 @@
+from asyncio.windows_events import NULL
 import random
 import time
 import json
 import asyncio
+import config
 
 from paho.mqtt import client as mqtt_client
 
 from types import SimpleNamespace
 
 
-broker = 'broker.emqx.io'
-port = 1883
-topic = "devices/edge"
+broker = config.mqtt['broker']
+port = config.mqtt['port']
+topic = "devices/sensor"
 #username = ''
 #password = ''
 
@@ -38,8 +40,13 @@ def publish(client):
     for x in range(0, 3):
         for y in range(0, 10):
             msgs.append(get_data(x))
+    
+    while len(device_list) != 1:
+        time.sleep(1)
 
     for msg in msgs:
+        select_best_node(msg)
+
         result = client.publish(topic, msg)
         # result: [0, 1]
         status = result[0]
@@ -48,15 +55,13 @@ def publish(client):
         else:
             print(f"Failed to send message to topic {topic}")
 
-        time.sleep(1)
+        time.sleep(0.2)
         
 
 
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, msg):
-        print(str(msg.topic))
         if (msg.topic == "devices/edge"):
-            print("teste")
             # Add device information to the list of devices
             # print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
             add_device(msg.payload.decode())
@@ -76,12 +81,31 @@ def add_device(msg):
 
 
 # Based on the data of all devices, it returns the best node to process the data
-def select_best_node():
+def select_best_node(sensor_data):
+    sensor = json.loads(sensor_data, object_hook=lambda d: SimpleNamespace(**d))
+    devices = device_list
+
+    selected_node = NULL
+    least_cpu_percentage = 100
+    least_memory_percentage = 100
+
+    compatible_apptype = []
+
     # Tablet -> Datacenter -> Cloud
     # Aplicação -> Dispositivo -> Rede
+
     # Verificar primeiro a aplicação
-    for device in device_list:
-        print(device)
+    for device in devices:
+        if(device.application_type == sensor.application_type):
+            compatible_apptype.append(device)
+    
+    # Se tiver dispositivos com o mesmo tipo de aplicação, filtra a lista
+    if compatible_apptype:
+       devices = compatible_apptype 
+
+    return 1;
+
+
 
 
 def get_data(application_type):

@@ -48,13 +48,13 @@ def get_device_data():
     data['cpu_count'] = psutil.cpu_count() # CPU Count
     data['memory_total'] = psutil.virtual_memory().total # Memory Total
     data['memory_percentage'] = psutil.virtual_memory().percent # Memory Percentage
-    data['cloud_latency'] = asyncio.run(check_cloud_latency()) # Cloud Latency
+    # data['cloud_latency'] = asyncio.run(check_cloud_latency()) # Cloud Latency
     
     # Não está conseguindo pegar a porcentagem de uso de disco corretamente
     # data['disk_partitions'] = psutil.disk_partitions()
     # data['disk_usage'] = psutil.disk_usage(psutil.disk_partitions()[0][0]) # Disk Usage
 
-    # data['network_ip_address']
+    data['network_ip_address'] = "192.168.1.1"
 
     # Battery doesn't work on windows
     data['battery_level'] = psutil.sensors_battery().percent if psutil.sensors_battery() else NULL# Battery Percentage
