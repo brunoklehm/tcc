@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import random
 import json
 import psutil
@@ -57,8 +56,8 @@ def get_device_data():
     data['network_ip_address'] = "192.168.1.1"
 
     # Battery doesn't work on windows
-    data['battery_level'] = psutil.sensors_battery().percent if psutil.sensors_battery() else NULL# Battery Percentage
-    data['battery_remaining'] = psutil.sensors_battery().secsleft if psutil.sensors_battery() else NULL # Battery Seconds Remaining
+    data['battery_level'] = psutil.sensors_battery().percent if psutil.sensors_battery() else None# Battery Percentage
+    data['battery_remaining'] = psutil.sensors_battery().secsleft if psutil.sensors_battery() else None # Battery Seconds Remaining
     data['application_type'] = config.application_type # Application Type
 
     # data['location'] ? não sei se é possível pegar esse tipo de informação com o psutil
