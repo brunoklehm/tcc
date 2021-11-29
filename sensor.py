@@ -1,9 +1,11 @@
 import random
 import time
 import json
+import asyncio
 import config
 
 from paho.mqtt import client as mqtt_client
+from icmplib import async_ping
 
 from types import SimpleNamespace
 
@@ -19,6 +21,7 @@ client_id = f'sensor-mqtt-{random.randint(0, 1000)}'
 
 device_list = []
 
+cloud_latency = 0
 
 def connect_mqtt():
     def on_connect(client, userdata, flags, rc):
@@ -40,11 +43,14 @@ def publish(client):
         for y in range(0, 10):
             msgs.append(get_data(x))
 
-    while len(device_list) == 0:
-        time.sleep(1)
+    #while len(device_list) == 0:
+    #    time.sleep(1)
+    global cloud_latency
+    cloud_latency = asyncio.run(ping(config.cloud_ip))
+    
 
     for msg in msgs:
-        select_best_node(msg)
+        print(select_best_node(msg))
 
         result = client.publish(topic, msg)
         # result: [0, 1]
@@ -105,34 +111,45 @@ def select_best_node(sensor_data):
 
     # Se tiver dispositivos com o mesmo tipo de aplicação, filtra a lista
     if filtered_devices:
-        devices = filtered_devices
+        # Nova lista para salvar a média dos devices
+        final_devices = []
 
-    final_devices = []
+        # Verifica os dados da máquina e da rede
+        for device in filtered_devices:
+            cpu = device.cpu_percentage
+            memory = device.memory_percentage
+            # battery = device.battery_level
+            
+            #average = ( ((cpu * 0.5) + (memory * 0.3) + (battery * 0.2)) / 1)
+            average = ((cpu * 0.6) + (memory * 0.4) / 1)
 
-    # Verifica os dados da máquina e da rede
-    for device in devices:
-        cpu = device.cpu_percentage
-        memory = device.memory_percentage
-        # battery = device.battery_level
+            d = (device.client_id, device.network_ip_address, average)
+            
+            final_devices.append(d)
+
+        least_average = 100
+
+        # Escolhe o melhor device na categoria
+        for device in final_devices:
+            if device[2] < least_average:
+                least_average = device[2]
+                selected_node = device
         
-        #mp = ( ((cpu * 0.5) + (memory * 0.3) + (battery * 0.2)) / 1)
-        mp = ((cpu * 0.6) + (memory * 0.4) / 1)
-
-        d = (device.client_id, device.network_ip_address, mp)
+        ping_selected_node = asyncio.run(ping(selected_node[1]))
         
-        final_devices.append(d)
+        if ping_selected_node < cloud_latency:
+            return ping_selected_node
+        else:
+            return cloud_latency
 
-    least_mp = 100
+    else:
+        return cloud_latency
+    
 
-    for device in final_devices:
-        if device[2] < least_mp:
-            least_mp = device[2]
-            selected_node = device
-
-    print(selected_node)
-
-    return selected_node[1] # ip address
-
+# Function that checks latency
+async def ping(ip):
+    host = await async_ping(ip, count=1, interval=0.2)
+    return host.avg_rtt
 
 def get_data(application_type):
     data = {}

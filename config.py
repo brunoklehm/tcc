@@ -5,7 +5,7 @@ mqtt = dict(
     username = '',
     password = '',
 )
-cloud_ip = '10.0.0.20'
+cloud_ip = '8.8.8.8'
 sensor_ip = '10.0.0.10'
 local_ip = '10.0.0.1'
 application_type = 1

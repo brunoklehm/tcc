@@ -72,7 +72,6 @@ def get_device_data():
 async def check_cloud_latency():
     host = await async_ping(config.cloud_ip, count=1, interval=0.2)
     return host.avg_rtt
-    # Fazer ping dos 3 dispositivos
 
 
 # Main function
