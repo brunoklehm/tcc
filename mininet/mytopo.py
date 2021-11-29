@@ -18,7 +18,7 @@ class MyTopo(Topo):
         s2 = self.addSwitch('s2')
 
         # Add hosts
-        tablet = self.addHost('tablet', mac='00:00:00:00:00:02', ip='10.0.0.5/8')
+        tablet = self.addStation('tablet', mac='00:00:00:00:00:02')
         sensor = self.addStation('sensor', mac='00:00:00:00:00:03', ip='10.0.0.10/8')
         datacenter = self.addHost('datacenter', mac='00:00:00:00:00:04', ip='10.0.0.15/8')
         cloud = self.addHost('cloud', mac='00:00:00:00:00:05', ip='10.0.0.20/8')

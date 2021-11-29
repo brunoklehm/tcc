@@ -4,6 +4,7 @@ import psutil
 import config
 import asyncio
 import time
+import sys
 
 
 from paho.mqtt import client as mqtt_client
@@ -43,22 +44,22 @@ def get_device_data():
     data = {}
     data['client_id'] = client_id
     data['cpu_percentage'] = psutil.cpu_percent() # CPU Percentage
-    data['cpu_frequency'] = psutil.cpu_freq().max # CPU Frequency
+    # data['cpu_frequency'] = psutil.cpu_freq().max # CPU Frequency
     data['cpu_count'] = psutil.cpu_count() # CPU Count
     data['memory_total'] = psutil.virtual_memory().total # Memory Total
     data['memory_percentage'] = psutil.virtual_memory().percent # Memory Percentage
-    # data['cloud_latency'] = asyncio.run(check_cloud_latency()) # Cloud Latency
+    data['cloud_latency'] = asyncio.run(check_cloud_latency()) # Cloud Latency
     
     # Não está conseguindo pegar a porcentagem de uso de disco corretamente
     # data['disk_partitions'] = psutil.disk_partitions()
     # data['disk_usage'] = psutil.disk_usage(psutil.disk_partitions()[0][0]) # Disk Usage
 
-    data['network_ip_address'] = "192.168.1.1"
+    data['network_ip_address'] = config.local_ip
 
     # Battery doesn't work on windows
     data['battery_level'] = psutil.sensors_battery().percent if psutil.sensors_battery() else None# Battery Percentage
     data['battery_remaining'] = psutil.sensors_battery().secsleft if psutil.sensors_battery() else None # Battery Seconds Remaining
-    data['application_type'] = config.application_type # Application Type
+    data['application_type'] = str(sys.argv[1]) # Application Type
 
     # data['location'] ? não sei se é possível pegar esse tipo de informação com o psutil
     # more to be added

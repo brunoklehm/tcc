@@ -1,8 +1,6 @@
-from asyncio.windows_events import NULL
 import random
 import time
 import json
-import asyncio
 import config
 
 from paho.mqtt import client as mqtt_client
@@ -42,7 +40,7 @@ def publish(client):
         for y in range(0, 10):
             msgs.append(get_data(x))
 
-    while len(device_list) != 1:
+    while len(device_list) == 0:
         time.sleep(1)
 
     for msg in msgs:
@@ -93,7 +91,7 @@ def select_best_node(sensor_data):
         sensor_data, object_hook=lambda d: SimpleNamespace(**d))
     devices = device_list
 
-    selected_node = NULL
+    selected_node = None
 
     filtered_devices = []
 
@@ -109,23 +107,24 @@ def select_best_node(sensor_data):
     if filtered_devices:
         devices = filtered_devices
 
-    final_round = []
+    final_devices = []
 
     # Verifica os dados da máquina e da rede
     for device in devices:
         cpu = device.cpu_percentage
         memory = device.memory_percentage
-        battery = device.battery_level
+        # battery = device.battery_level
         
-        mp = ( ((cpu * 0.5) + (memory * 0.3) + (battery * 0.2)) / 1)
+        #mp = ( ((cpu * 0.5) + (memory * 0.3) + (battery * 0.2)) / 1)
+        mp = ((cpu * 0.6) + (memory * 0.4) / 1)
 
         d = (device.client_id, device.network_ip_address, mp)
         
-        final_round.append(d)
+        final_devices.append(d)
 
     least_mp = 100
 
-    for device in final_round:
+    for device in final_devices:
         if device[2] < least_mp:
             least_mp = device[2]
             selected_node = device
