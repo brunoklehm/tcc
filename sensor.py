@@ -118,10 +118,11 @@ def select_best_node(sensor_data):
         for device in filtered_devices:
             cpu = device.cpu_percentage
             memory = device.memory_percentage
+            cloud = device.cloud_latency
             # battery = device.battery_level
             
             #average = ( ((cpu * 0.5) + (memory * 0.3) + (battery * 0.2)) / 1)
-            average = ((cpu * 0.6) + (memory * 0.4) / 1)
+            average = ((cpu * 0.4) + (memory * 0.4) + (cloud * 0.2 )/ 1)
 
             d = (device.client_id, device.network_ip_address, average)
             
