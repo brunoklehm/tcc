@@ -39,24 +39,24 @@ def connect_mqtt():
 
 def publish(client):
     msgs = []
-    for x in range(0, 3):
+    for x in range(1, 4):
         for y in range(0, 10):
             msgs.append(get_data(x))
 
-    #while len(device_list) == 0:
-    #    time.sleep(1)
-    global cloud_latency
-    cloud_latency = asyncio.run(ping(config.cloud_ip))
-    
+    while len(device_list) == 0:
+        time.sleep(1)
 
+    global cloud_latency
     for msg in msgs:
-        print(select_best_node(msg))
+        cloud_latency = asyncio.run(ping(config.cloud_ip))
+        print(str(select_best_node(msg)))
 
         result = client.publish(topic, msg)
         # result: [0, 1]
         status = result[0]
         if status == 0:
-            print(f"Send `{msg}` to topic `{topic}`")
+            pass
+            #print(f"Send `{msg}` to topic `{topic}`")
         else:
             print(f"Failed to send message to topic {topic}")
 
@@ -95,18 +95,21 @@ def add_device(msg):
 def select_best_node(sensor_data):
     sensor = json.loads(
         sensor_data, object_hook=lambda d: SimpleNamespace(**d))
+    global device_list
     devices = device_list
 
     selected_node = None
 
     filtered_devices = []
 
+    msg = ""
+
     # Tablet -> Datacenter -> Cloud
     # Aplicação -> Dispositivo -> Rede
 
     # Verifica primeiro o tipo de aplicação
     for device in devices:
-        if(device.application_type == sensor.application_type):
+        if int(device.application_type) == int(sensor.application_type):
             filtered_devices.append(device)
 
     # Se tiver dispositivos com o mesmo tipo de aplicação, filtra a lista
@@ -138,13 +141,17 @@ def select_best_node(sensor_data):
         
         ping_selected_node = asyncio.run(ping(selected_node[1]))
         
+        
+
         if ping_selected_node < cloud_latency:
-            return ping_selected_node
+            msg = "Application Type: " + str(sensor.application_type) + " - " + str(selected_node[1]) + " - " + str(ping_selected_node) + "ms"
         else:
-            return cloud_latency
+            msg = "Application Type: " + str(sensor.application_type) + " - " + str(config.cloud_ip) + " - " + str(cloud_latency) + "ms"
 
     else:
-        return cloud_latency
+        msg = "Application Type: " + str(sensor.application_type) + " - " + str(config.cloud_ip) + " - " + str(cloud_latency) + "ms"
+
+    return msg
     
 
 # Function that checks latency
